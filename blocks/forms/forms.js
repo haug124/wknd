@@ -1,28 +1,23 @@
 export default async function decorate(block) {
-  const formURL = block.textContent.trim();
+  let formURL = block.textContent.trim();
 
-  // Ensure the form URL is correct
-  if (!formURL.endsWith('booking.xlsx')) {  // ✅ Ensure we're using booking.xlsx
-    console.error('Invalid form URL:', formURL);
-    block.innerHTML = `<p>Error: Invalid form URL. Please check the file name.</p>`;
-    return;
+  // Convert the Excel URL to its JSON equivalent
+  if (formURL.endsWith('.xlsx')) {
+    formURL = formURL.replace('.xlsx', '.json');  // ✅ Convert to JSON
   }
 
-  console.log('Attempting to load form from:', formURL);
+  console.log('Loading form from:', formURL);
 
   try {
-    // Fetch the Excel file
+    // Fetch the JSON file instead of the XLSX
     const response = await fetch(formURL);
-    
+
     if (!response.ok) {
       throw new Error(`Failed to load form: ${response.status} ${response.statusText}`);
     }
 
-    // Read the Excel file data
-    const data = await response.arrayBuffer();
-    const workbook = XLSX.read(new Uint8Array(data), { type: 'array' });
-    const sheetName = workbook.SheetNames[0];
-    const sheet = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+    // Read JSON data
+    const sheet = await response.json();
 
     if (!sheet.length) {
       throw new Error('Form file is empty or not properly formatted.');
